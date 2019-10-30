@@ -1,42 +1,48 @@
 pipeline {
     agent any
-
+    
     stages {
-         stage ('Checking Deploy tool and initial cleanup') {
-             steps {
-                 sh 'mvn --version'
-                 sh 'java -version'
-                 sh ' git --version'
-                 sh 'rm -rf codebase || true'
-             }
-         }
+        stage('checking deploy tools and initial clean'){
+            steps{
+                sh 'mvn --version'
+                sh 'java -version'
+                sh 'git --version'
+                sh 'rm -rf codebase || true'
 
-         stage ('pull down codbase') {
-             steps  {
-                 sh 'git clone https://github.com/shegoj/LiquorStoreServlet.git codebase'
+            }
+        }
+        stage('pull down code base'){
+            steps{
+                sh 'git clone https://github.com/shegoj/LiquorStoreServlet.git codebase'
+            }
+        }
 
-             }
-         }
-         stage ('compile and test code') {
-             steps  {
-                 sh 'cd codebase && mvn clean install'
-             }
-         }
-         stage ('deploy code to App Server') {
-             steps  {
-                 echo  'deployed'
-                 sh ' cp /tmp/key.pem jenkinskey3.pem && chmod 400  jenkinskey3.pem'
-                 sh 'scp -i  jenkinskey3.pem -o StrictHostKeyChecking=no codebase/target/SampleServlet.war  ec2-user@172.31.12.75:/var/lib/tomcat/webapps'
-             }
+        stage('compile and test code'){
+            steps{
+                sh 'cd codebase && mvn clean install'
+            }
         }
-        stage ('Test code on App Server') {
-             steps  {
-                 echo  'code tested'
-             }
+
+        stage('Deploy code to App server'){
+            steps {
+                sh 'rm -rf /tmp/jenkinskey.pem || true'
+                sh 'cp /tmp/jenkins_key4.pem /tmp/jenkinskey.pem && chmod 400 /tmp/jenkinskey.pem'
+                sh 'ls -la /tmp' 
+                sh 'scp -i /tmp/jenkinskey.pem -o StrictHostKeyChecking=no codebase/target/SampleServlet.war ec2-user@ec2-52-208-152-171.eu-west-1.compute.amazonaws.com:/tmp/tomcat/apache-tomcat-8.5.47/webapps'
+                echo 'code Deployed'
+            }
         }
-        stage ('complete') {
-             steps  {
-                 echo  'complete'
+        
+        stage('test code on app server'){
+            steps {
+                echo 'code tested'
+            }
+        }
+        
+
+        stage('complete'){
+            steps {
+                echo 'complete'
             }
         }
     }
